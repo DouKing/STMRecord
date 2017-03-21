@@ -82,6 +82,7 @@
   NSLog(@"\n\nuser:\n%@, %@\n\n", user.name, user.age);
   
   id<UserRecord> child = user.child;
+  child.name = @"王五";
   NSLog(@"\n\nchild:\n%@, %@\n\n", child.name, child.age);
   
   NSArray<id<BookRecord>> *books = user.books;
