@@ -96,6 +96,37 @@
       NSLog(@"\n\nlanuage: %@\n\n", lanuage.name);
     }];
   }];
+  
+  NSLog(@"\n\ntest read\n%@\n\n%@\n\n", [user representationDictionary], [user jsonDictionary]);
+}
+
+- (void)testSave {
+  id<UserRecord> user = STMCreatRecord();
+  user.name = @"小明";
+  user.age = @38;
+  
+  id<UserRecord> child = STMCreatRecord();
+  child.name = @"小强";
+  child.age = @12;
+  
+  id<BookRecord> book1 = STMCreatRecord();
+  book1.name = @"iOS 开发进阶";
+  book1.price = @60;
+  
+  id<BookRecord> book2 = STMCreatRecord();
+  book2.name = @"iOS 开发进阶（第二版）";
+  book2.price = @60;
+  
+  id<LanguageRecord> lanuage1 = STMCreatRecord();
+  lanuage1.name = @"English";
+  
+  user.child = child;
+  user.books = @[book1, book2];
+  user.lanuages = @[
+                    @[lanuage1]
+                    ];
+  
+  NSLog(@"\n\ntest save\n%@\n\n%@\n\n", [user representationDictionary], [user jsonDictionary]);
 }
 
 - (void)testPerformanceExample {
