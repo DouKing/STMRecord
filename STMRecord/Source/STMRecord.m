@@ -152,8 +152,15 @@
   
   propertyName = [self _propertyNameScanFromSetterSelector:anInvocation.selector];
   if (propertyName) {
-    anInvocation.selector = @selector(setObject:forKey:);
-    [anInvocation setArgument:&propertyName atIndex:3]; // self, _cmd, obj, key
+    __unsafe_unretained id obj = nil;
+    [anInvocation getArgument:&obj atIndex:2];
+    if (obj != nil) {
+      anInvocation.selector = @selector(setObject:forKey:);
+      [anInvocation setArgument:&propertyName atIndex:3]; // self, _cmd, obj, key
+    } else {
+      anInvocation.selector = @selector(removeObjectForKey:);
+      [anInvocation setArgument:&propertyName atIndex:2]; // self, _cmd, key
+    }
     [anInvocation invokeWithTarget:self.innerDic];
     return;
   }

@@ -114,10 +114,12 @@
   id<BookRecord> book1 = STMCreatRecord();
   book1.name = @"iOS 开发进阶";
   book1.price = @60;
+  book1.name = nil;
   
   id<BookRecord> book2 = STMCreatRecord();
   book2.name = @"iOS 开发进阶（第二版）";
   book2.price = @60;
+  [book2 setPrice:nil];//设为nil表示移除
   
   id<LanguageRecord> lanuage1 = STMCreatRecord();
   lanuage1.name = @"English";
