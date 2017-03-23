@@ -11,9 +11,13 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol STMRecord <NSObject>
-@property (nonatomic, strong, readonly) NSDictionary *dic;
+
+@property (nonatomic, strong, readonly) NSDictionary *representationDictionary;
+@property (nonatomic, strong, readonly) NSDictionary *jsonDictionary;
+
 @end
 
 extern id/**<STMRecord>*/ STMCreatRecordWithDictionary(NSDictionary *dic);
+extern id/**<STMRecord>*/ STMCreatRecord();
 
 NS_ASSUME_NONNULL_END

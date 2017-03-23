@@ -8,36 +8,41 @@
 
 #import "STMRecord.h"
 
-@interface STMRecord : NSProxy<STMRecord>
+@interface STMRecord : NSObject<STMRecord>
 
 - (instancetype)initWithDictionary:(NSDictionary *)dic;
+
 @property (nonatomic, strong, readonly) NSMutableDictionary *innerDic;
 
 @end
 
 @implementation STMRecord
-@synthesize dic = _dic;
+
+- (instancetype)init {
+  return [self initWithDictionary:@{}];
+}
 
 - (instancetype)initWithDictionary:(NSDictionary *)dic {
-  if (dic) {
-    _dic = dic;
-    _innerDic = [self _handleDic:dic];
+  NSAssert([NSJSONSerialization isValidJSONObject:dic], @"JSON格式不正确！");
+  self = [super init];
+  if (self) {
+    _innerDic = [self _recordDic:dic ?: @{}];
   }
   return self;
 }
 
 #pragma mark - Private Methods
 
-- (NSMutableDictionary *)_handleDic:(NSDictionary *)dic {
-  NSLog(@"%s", __FUNCTION__);
+- (NSMutableDictionary *)_recordDic:(NSDictionary *)dic {
   NSMutableDictionary *result = [NSMutableDictionary dictionary];
+  __weak typeof(self) weakSelf = self;
   [dic enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
     if ([obj isKindOfClass:[NSDictionary class]]) {
       STMRecord *record = [[STMRecord alloc] initWithDictionary:obj];
       [result setObject:record forKey:key];
     } else if ([obj isKindOfClass:[NSArray class]]) {
       NSArray *arr = (NSArray *)obj;
-      [result setObject:[self _handleArray:arr] forKey:key];
+      [result setObject:[weakSelf _recordArray:arr] forKey:key];
     } else {
       [result setObject:obj forKey:key];
     }
@@ -45,20 +50,52 @@
   return result;
 }
 
-- (NSArray *)_handleArray:(NSArray *)arr {
-  NSLog(@"%s", __FUNCTION__);
+- (NSArray *)_recordArray:(NSArray *)arr {
   NSMutableArray *tempArray = [NSMutableArray arrayWithCapacity:arr.count];
+  __weak typeof(self) weakSelf = self;
   [arr enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
     if ([obj isKindOfClass:[NSDictionary class]]) {
       STMRecord *record = [[STMRecord alloc] initWithDictionary:obj];
       [tempArray addObject:record];
     } else if ([obj isKindOfClass:[NSArray class]]) {
-      [tempArray addObject:[self _handleArray:obj]];
+      [tempArray addObject:[weakSelf _recordArray:obj]];
     } else {
       [tempArray addObject:obj];
     }
   }];
   return [tempArray copy];
+}
+
+- (NSDictionary *)_originalDic:(NSDictionary *)dic {
+  NSMutableDictionary *result = [NSMutableDictionary dictionaryWithCapacity:dic.count];
+  __weak typeof(self) weakSelf = self;
+  [dic enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+    if ([obj isKindOfClass:[NSArray class]]) {
+      [result setObject:[weakSelf _originalArray:obj] forKey:key];
+    } else if ([obj conformsToProtocol:@protocol(STMRecord)]) {
+      NSDictionary *d = [(id<STMRecord>)obj representationDictionary];
+      [result setObject:d forKey:key];
+    } else {
+      [result setObject:obj forKey:key];
+    }
+  }];
+  return result;
+}
+
+- (NSArray *)_originalArray:(NSArray *)arr {
+  NSMutableArray *tempArray = [NSMutableArray arrayWithCapacity:arr.count];
+  __weak typeof(self) weakSelf = self;
+  [arr enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+    if ([obj conformsToProtocol:@protocol(STMRecord)]) {
+      NSDictionary *d = [(id<STMRecord>)obj representationDictionary];
+      [tempArray addObject:d];
+    } else if ([obj isKindOfClass:[NSArray class]]) {
+      [tempArray addObject:[weakSelf _originalArray:obj]];
+    } else {
+      [tempArray addObject:obj];
+    }
+  }];
+  return tempArray;
 }
 
 #pragma mark - Helpers
@@ -88,8 +125,7 @@
   SEL changedSelector = aSelector;
   if ([self _propertyNameScanFromGetterSelector:aSelector]) {
     changedSelector = @selector(objectForKey:);
-  }
-  else if ([self _propertyNameScanFromSetterSelector:aSelector]) {
+  } else if ([self _propertyNameScanFromSetterSelector:aSelector]) {
     changedSelector = @selector(setObject:forKey:);
   }
   NSMethodSignature *sign = [[self.innerDic class] instanceMethodSignatureForSelector:changedSelector];
@@ -120,8 +156,19 @@
 
 #pragma mark - setter & getter
 
+- (NSDictionary *)representationDictionary {
+  return self.innerDic;
+}
+
+- (NSDictionary *)jsonDictionary {
+  return [self _originalDic:self.innerDic];
+}
 
 @end
+
+id/**<STMRecord>*/ STMCreatRecord() {
+  return [[STMRecord alloc] init];
+}
 
 id/**<STMRecord>*/ STMCreatRecordWithDictionary(NSDictionary *dic) {
   return [[STMRecord alloc] initWithDictionary:dic];
