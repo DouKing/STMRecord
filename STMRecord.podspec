@@ -9,7 +9,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "STMRecord"
-  s.version      = "1.0.0"
+  s.version      = "1.1.0"
   s.summary      = "鸭子模型"
   s.homepage     = "https://github.com/DouKing/STMRecord"
   s.license      = "MIT"
