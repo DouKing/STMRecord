@@ -111,12 +111,19 @@
 
 - (NSString *)_propertyNameScanFromSetterSelector:(SEL)selector {
   NSString *selectorName = NSStringFromSelector(selector);
-  NSUInteger parameterCount = [[selectorName componentsSeparatedByString:@":"] count] - 1;
-  if ([selectorName hasPrefix:@"set"] && parameterCount == 1) {
-    NSUInteger firstColonLocation = [selectorName rangeOfString:@":"].location;
-    return [selectorName substringWithRange:NSMakeRange(3, firstColonLocation - 3)].lowercaseString;
+  NSArray<NSString *> *selNameArray = [selectorName componentsSeparatedByString:@":"];
+  if (2 != selNameArray.count) {
+    return nil;
   }
-  return nil;
+  NSString *property = selNameArray.firstObject;
+  if (![property hasPrefix:@"set"] || property.length <= 3) {
+    return nil;
+  }
+  property = [property substringFromIndex:3];
+  NSString *firChar = [property substringToIndex:1];
+  NSString *lowerFirChar = [firChar lowercaseString];
+  property = [lowerFirChar stringByAppendingString:[property substringFromIndex:1]];
+  return property;
 }
 
 #pragma mark - forwad

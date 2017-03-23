@@ -13,6 +13,7 @@
 @protocol UserRecord <STMRecord>
 
 @property (nonatomic, strong) NSString *name;
+@property (nonatomic, strong) NSString *familyName;
 @property (nonatomic, strong) NSNumber *age;
 @property (nonatomic, strong) id<UserRecord> child;
 @property (nonatomic, strong) NSArray<id<BookRecord>> *books;
@@ -45,7 +46,8 @@
   [super setUp];
   // Put setup code here. This method is called before the invocation of each test method in the class.
   self.userInfo = @{
-                    @"name" : @"张三",
+                    @"name" : @"三儿",
+                    @"familyName" : @"张",
                     @"age" : @30,
                     @"child" : @{
                         @"name" : @"李四",
@@ -82,7 +84,6 @@
   NSLog(@"\n\nuser:\n%@, %@\n\n", user.name, user.age);
   
   id<UserRecord> child = user.child;
-  child.name = @"王五";
   NSLog(@"\n\nchild:\n%@, %@\n\n", child.name, child.age);
   
   NSArray<id<BookRecord>> *books = user.books;
@@ -102,6 +103,7 @@
 
 - (void)testSave {
   id<UserRecord> user = STMCreatRecord();
+  user.familyName = @"王";
   user.name = @"小明";
   user.age = @38;
   
@@ -126,7 +128,7 @@
                     @[lanuage1]
                     ];
   
-  NSLog(@"\n\ntest save\n%@\n\n%@\n\n", [user representationDictionary], [user jsonDictionary]);
+  NSLog(@"\n\ntest save\n%@\n%@\n\n%@\n\n", user.familyName, [user representationDictionary], [user jsonDictionary]);
 }
 
 - (void)testPerformanceExample {
